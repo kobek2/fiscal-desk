@@ -324,7 +324,7 @@ export function createFederal(): JurisdictionState {
   return {
     id: 'federal',
     name: 'Federal Government',
-    period: { fiscalYear: 2026, quarter: 1 },
+    period: { fiscalYear: 2028, quarter: 1 },
     economy: {
       gdp: 29_000_000_000_000,
       gdpGrowthRateAnnualized: 0,
@@ -542,7 +542,7 @@ export function createRegion(
   return {
     id,
     name: meta.label,
-    period: { fiscalYear: 2026, quarter: 1 },
+    period: { fiscalYear: 2028, quarter: 1 },
     economy: {
       gdp: nationalGdp * meta.gdp,
       gdpGrowthRateAnnualized: 0,

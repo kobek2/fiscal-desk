@@ -5,7 +5,7 @@ import {
   type EconomyState,
 } from './economy'
 
-const STORAGE_KEY = 'discord-budget-sim-v9'
+const STORAGE_KEY = 'discord-budget-sim-v10'
 
 function migrate(raw: unknown): EconomyState {
   const base = createInitialState()
@@ -62,7 +62,7 @@ export function useEconomy() {
   }, [state])
 
   const reset = useCallback(() => {
-    if (confirm('Reset the entire sim to FY2025–26 baselines?')) {
+    if (confirm('Reset the entire sim to FY2028 baselines?')) {
       setState(createInitialState())
     }
   }, [])

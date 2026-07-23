@@ -49,7 +49,7 @@ export function createInitialState(): EconomyState {
         id: crypto.randomUUID(),
         at: new Date().toISOString(),
         kind: 'note',
-        title: 'Sim initialized (FY2025–26 baselines)',
+        title: 'Sim initialized (FY2028 baselines)',
         detail:
           'Annual federal budget cycle. GDP growth is driven by Discord server joins (Admin Dashboard). Record membership before submitting each FY.',
       },
