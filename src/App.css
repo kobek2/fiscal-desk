@@ -1355,6 +1355,15 @@ main {
   margin-bottom: 0.65rem;
 }
 
+.bill-export-note {
+  margin: 0 0 0.85rem;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.88rem;
+  background: #eef6f2;
+  border: 1px solid #b7d4c6;
+  color: #1d4a38;
+}
+
 .bill-text {
   width: 100%;
   box-sizing: border-box;
@@ -1409,9 +1418,42 @@ main {
   background: #fffef8;
   border: 1px solid #cfc8b8;
   box-shadow: 0 12px 40px rgba(40, 30, 10, 0.08);
-  padding: 2rem 2.25rem 2.5rem;
+  padding: 1.25rem 1.5rem 2rem;
   color: #1a1a1a;
   font-family: "Times New Roman", Times, "Liberation Serif", serif;
+}
+
+.discord-page {
+  margin: 0 0 1.75rem;
+  padding: 1.25rem 1.35rem 1.5rem;
+  border: 1px solid #ddd4c4;
+  background: #fffef8;
+  break-inside: avoid;
+}
+
+.discord-page:last-child {
+  margin-bottom: 0;
+}
+
+.discord-page-label {
+  margin: 0 0 0.85rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #7a7264;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+.bill-packet.discord-capturing .discord-page {
+  width: 720px;
+  margin: 0 auto 2rem;
+  padding: 2rem 2.25rem;
+  border: 1px solid #cfc8b8;
+  box-shadow: none;
+}
+
+.bill-packet.discord-capturing .charts-grid {
+  grid-template-columns: 1fr;
 }
 
 .bill-cover {

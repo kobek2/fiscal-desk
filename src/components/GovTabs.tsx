@@ -11,17 +11,22 @@ interface Props {
 
 const TABS: { id: AppView; label: string }[] = [
   { id: 'federal', label: 'Federal' },
-  { id: 'west', label: 'Western Region' },
-  { id: 'east', label: 'Eastern Region' },
-  { id: 'central', label: 'Central Region' },
   { id: 'admin', label: 'Admin' },
 ]
 
 export function GovTabs({ state, selected, onSelect }: Props) {
   const joinsReady = state.membership.joinsThisYear != null
+  const federal = state.governments.federal
+  const { balance } = projectBudget(federal)
+  const status =
+    balance > federal.economy.gdp * 0.01
+      ? 'surplus'
+      : balance < -federal.economy.gdp * 0.01
+        ? 'deficit'
+        : 'balanced'
 
   return (
-    <div className="gov-tabs" role="tablist" aria-label="Governments">
+    <div className="gov-tabs" role="tablist" aria-label="Views">
       {TABS.map((tab) => {
         if (tab.id === 'admin') {
           return (
@@ -43,22 +48,14 @@ export function GovTabs({ state, selected, onSelect }: Props) {
           )
         }
 
-        const gov = state.governments[tab.id]
-        const { balance } = projectBudget(gov)
-        const status =
-          balance > gov.economy.gdp * 0.01
-            ? 'surplus'
-            : balance < -gov.economy.gdp * 0.01
-              ? 'deficit'
-              : 'balanced'
         return (
           <button
             key={tab.id}
             type="button"
             role="tab"
-            aria-selected={selected === tab.id}
-            className={`gov-tab gov-tab-${tab.id} ${selected === tab.id ? 'active' : ''}`}
-            onClick={() => onSelect(tab.id)}
+            aria-selected={selected === 'federal'}
+            className={`gov-tab gov-tab-federal ${selected === 'federal' ? 'active' : ''}`}
+            onClick={() => onSelect('federal')}
           >
             <span className="tab-name">{tab.label}</span>
             <span className={`tab-balance ${status}`}>

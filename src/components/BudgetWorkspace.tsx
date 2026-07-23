@@ -6,7 +6,6 @@ import type {
   TaxBracket,
 } from '../economy'
 import {
-  REGION_META,
   balanceBudget,
   formatMoney,
   formatPct,
@@ -34,9 +33,6 @@ export function BudgetWorkspace({ state, govId, onChange }: Props) {
     gov.departments.find((d) => d.type === 'discretionary')?.id ?? gov.departments[0]?.id ?? null,
   )
 
-  const meta =
-    govId !== 'federal' ? REGION_META[govId as keyof typeof REGION_META] : null
-
   const patchGov = (fn: (g: typeof gov) => void) => {
     onChange((prev) =>
       updateJurisdiction(prev, govId, (g) => {
@@ -60,7 +56,6 @@ export function BudgetWorkspace({ state, govId, onChange }: Props) {
             FY {gov.period.fiscalYear} · annual budget
           </p>
           <h2>{gov.name}</h2>
-          {meta && <p className="states-line">{meta.states}</p>}
         </div>
         <div className={`balance-status ${proj.balance >= 0 ? 'surplus' : 'deficit'} debt-${proj.debtFlag}`}>
           <span className="balance-label">

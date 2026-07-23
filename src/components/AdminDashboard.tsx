@@ -186,8 +186,8 @@ export function AdminDashboard({ state, onChange }: Props) {
               Projected GDP growth: {formatPct(outlook.rate)} ({outlook.phase})
             </strong>
             <p className="admin-outlook-detail">
-              Applied to all regions at FY submit — employment and baselines
-              move with it.
+              Applied nationally at FY submit — employment and baselines move
+              with it.
             </p>
           </div>
         )}

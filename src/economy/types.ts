@@ -1,7 +1,8 @@
 /** Political Process–style budget sim types (federal + regions). */
 
 export type RegionId = 'west' | 'central' | 'east'
-export type GovId = 'federal' | RegionId
+/** Federal-only for now; regional governments are parked. */
+export type GovId = 'federal'
 
 export type FiscalStance = 'Stimulating' | 'Contracting' | 'Neutral'
 export type IncomeMode = 'flat' | 'progressive'
@@ -125,7 +126,7 @@ export interface Treasury {
 }
 
 export interface JurisdictionState {
-  id: GovId
+  id: GovId | RegionId
   name: string
   period: Period
   economy: EconomyIndicators

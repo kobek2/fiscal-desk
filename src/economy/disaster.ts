@@ -101,12 +101,11 @@ export function estimateRemediation(
   state: EconomyState,
   type: EventType,
   severity: Severity,
-  regionId: RegionId,
+  _regionId: RegionId = 'west',
 ): RemediationEstimate {
-  const region = state.governments[regionId]
   const federal = state.governments.federal
   const band = REMEDIATION_GDP_PCT[type][severity]
-  const gdp = region.economy.gdp
+  const gdp = federal.economy.gdp
   const neededMin = gdp * band.min
   const neededRecommended = gdp * band.recommended
   const neededMax = gdp * band.max
@@ -117,8 +116,7 @@ export function estimateRemediation(
     federal.departments.find((d) => d.id === 'defense')?.allocated ?? 0
 
   const comparisons = [
-    `${formatPct(band.recommended)} of ${region.name} GDP`,
-    `${formatPct(neededRecommended / federal.economy.gdp)} of national GDP`,
+    `${formatPct(band.recommended)} of national GDP`,
     defense > 0
       ? `${formatPct(neededRecommended / defense)} of annual Defense budget`
       : '',
@@ -128,7 +126,7 @@ export function estimateRemediation(
   ].filter(Boolean)
 
   const discordBrief = [
-    `**${EVENT_LABELS[type]} — ${SEVERITY_LABELS[severity]} (${region.name})**`,
+    `**${EVENT_LABELS[type]} — ${SEVERITY_LABELS[severity]} (Federal)**`,
     `To remedy: **${formatMoney(neededRecommended)}** (range ${formatMoney(neededMin)}–${formatMoney(neededMax)})`,
     ...comparisons.map((c) => `• ${c}`),
     `Disaster fund on hand: ${formatMoney(fund)}`,
@@ -138,7 +136,7 @@ export function estimateRemediation(
   return {
     type,
     severity,
-    regionId,
+    regionId: _regionId,
     label: EVENT_LABELS[type],
     severityLabel: SEVERITY_LABELS[severity],
     neededMin,

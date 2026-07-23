@@ -43,13 +43,11 @@ function App() {
           <>
             <BudgetWorkspace
               state={state}
-              govId={selected}
+              govId="federal"
               onChange={setState}
             />
-            {selected === 'federal' && (
-              <DisasterFundPanel state={state} onChange={setState} />
-            )}
-            <BillExport state={state} govId={selected} />
+            <DisasterFundPanel state={state} onChange={setState} />
+            <BillExport state={state} govId="federal" />
           </>
         )}
         <Ledger state={state} />

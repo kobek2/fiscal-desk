@@ -7,14 +7,13 @@ import type {
   RegionId,
   Severity,
 } from './types'
-import { createFederal, createRegion } from './seed'
+import { createFederal } from './seed'
 import { projectBudget } from './budgetEngine'
 import { formatMoney, formatPct } from './format'
 import { assessAdequacy, estimateRemediation } from './disaster'
 import { DEFAULT_MEMBERSHIP, growthFromJoins } from './membership'
 
-const ALL: GovId[] = ['federal', 'west', 'east', 'central']
-const REGIONS: RegionId[] = ['west', 'east', 'central']
+const ALL: GovId[] = ['federal']
 
 function clone<T>(x: T): T {
   return structuredClone(x)
@@ -33,15 +32,10 @@ function pushLog(
 
 export function createInitialState(): EconomyState {
   const federal = createFederal()
-  const gdp = federal.economy.gdp
-  const pop = federal.economy.population
   return {
     period: { ...federal.period },
     governments: {
       federal,
-      west: createRegion('west', gdp, pop),
-      east: createRegion('east', gdp, pop),
-      central: createRegion('central', gdp, pop),
     },
     membership: { ...DEFAULT_MEMBERSHIP },
     log: [
@@ -51,7 +45,7 @@ export function createInitialState(): EconomyState {
         kind: 'note',
         title: 'Sim initialized (FY2028 baselines)',
         detail:
-          'Annual federal budget cycle. GDP growth is driven by Discord server joins (Admin Dashboard). Record membership before submitting each FY.',
+          'Federal-only annual budget cycle. GDP growth is driven by Discord server joins (Admin Dashboard). Record membership before submitting each FY.',
       },
     ],
   }
@@ -211,43 +205,33 @@ export function submitBudget(state: EconomyState): EconomyState {
     )
     gov.treasury.balance += yearBalance
 
-    // Store realized membership-driven growth on every jurisdiction
+    // Membership-driven GDP + labor market (federal)
     gov.economy.gdpGrowthRateAnnualized = growth
+    const gdpBefore = gov.economy.gdp
+    gov.economy.gdp *= 1 + growth
+    gov.economy.unemploymentRate = clamp(
+      gov.economy.unemploymentRate - growth * 0.4,
+      0.025,
+      0.18,
+    )
+    gov.economy.jobVacancyRate = clamp(
+      gov.economy.jobVacancyRate + growth * 0.3,
+      0.01,
+      0.12,
+    )
+    gov.economy.laborForceParticipation = clamp(
+      gov.economy.laborForceParticipation + growth * 0.08,
+      0.55,
+      0.72,
+    )
+    gov.economy.population = Math.max(
+      1,
+      Math.round(gov.economy.population * (1 + growth * 0.12)),
+    )
 
-    if (id !== 'federal') {
-      const gdpBefore = gov.economy.gdp
-      gov.economy.gdp *= 1 + growth
-
-      // Labor market moves with the membership cycle
-      gov.economy.unemploymentRate = clamp(
-        gov.economy.unemploymentRate - growth * 0.4,
-        0.025,
-        0.18,
-      )
-      gov.economy.jobVacancyRate = clamp(
-        gov.economy.jobVacancyRate + growth * 0.3,
-        0.01,
-        0.12,
-      )
-      gov.economy.laborForceParticipation = clamp(
-        gov.economy.laborForceParticipation + growth * 0.08,
-        0.55,
-        0.72,
-      )
-      // Soft population drift with the cycle (not 1 Discord member = 1 citizen)
-      gov.economy.population = Math.max(
-        1,
-        Math.round(gov.economy.population * (1 + growth * 0.12)),
-      )
-
-      lines.push(
-        `${gov.name}: GDP ${formatMoney(gdpBefore)} → ${formatMoney(gov.economy.gdp)} (${formatPct(growth)}), uemp ${formatPct(gov.economy.unemploymentRate)}`,
-      )
-    } else {
-      lines.push(
-        `${gov.name}: budget ${formatMoney(yearBalance)} bal, debt ${formatMoney(gov.treasury.nationalDebt)}`,
-      )
-    }
+    lines.push(
+      `${gov.name}: GDP ${formatMoney(gdpBefore)} → ${formatMoney(gov.economy.gdp)} (${formatPct(growth)}), debt ${formatMoney(gov.treasury.nationalDebt)}, uemp ${formatPct(gov.economy.unemploymentRate)}`,
+    )
 
     const growthMult = 1 + growth
     for (const d of gov.departments) {
@@ -255,41 +239,6 @@ export function submitBudget(state: EconomyState): EconomyState {
       d.spent = 0
     }
   }
-
-  const f = next.governments.federal
-  f.economy.gdp =
-    next.governments.west.economy.gdp +
-    next.governments.central.economy.gdp +
-    next.governments.east.economy.gdp
-  f.economy.population =
-    next.governments.west.economy.population +
-    next.governments.central.economy.population +
-    next.governments.east.economy.population
-  f.economy.unemploymentRate =
-    (next.governments.west.economy.unemploymentRate *
-      next.governments.west.economy.population +
-      next.governments.central.economy.unemploymentRate *
-        next.governments.central.economy.population +
-      next.governments.east.economy.unemploymentRate *
-        next.governments.east.economy.population) /
-    f.economy.population
-  f.economy.jobVacancyRate =
-    (next.governments.west.economy.jobVacancyRate *
-      next.governments.west.economy.population +
-      next.governments.central.economy.jobVacancyRate *
-        next.governments.central.economy.population +
-      next.governments.east.economy.jobVacancyRate *
-        next.governments.east.economy.population) /
-    f.economy.population
-  f.economy.laborForceParticipation =
-    (next.governments.west.economy.laborForceParticipation *
-      next.governments.west.economy.population +
-      next.governments.central.economy.laborForceParticipation *
-        next.governments.central.economy.population +
-      next.governments.east.economy.laborForceParticipation *
-        next.governments.east.economy.population) /
-    f.economy.population
-  f.economy.gdpGrowthRateAnnualized = growth
 
   // Roll membership into next FY
   if (next.membership.currentTotalMembers != null) {
@@ -348,22 +297,17 @@ export function presidentialRelief(
     opts.regionId,
   )
   const federal = next.governments.federal
-  const region = next.governments[opts.regionId]
   const amount = Math.max(0, opts.reliefAmount)
   const adequacy = assessAdequacy(amount, estimate)
 
   if (opts.type === 'recession' || opts.type === 'boom') {
     const pct = estimate.pctOfRegionalGdp
     const applied = opts.type === 'recession' ? -pct : pct
-    region.economy.gdp *= 1 + applied
-    federal.economy.gdp = REGIONS.reduce(
-      (s, id) => s + next.governments[id].economy.gdp,
-      0,
-    )
+    federal.economy.gdp *= 1 + applied
     pushLog(next, {
       kind: 'event',
-      title: `${estimate.label} (${estimate.severityLabel}) — ${region.name}`,
-      detail: `Macro shock ${formatPct(applied)} to regional GDP. (No relief fund draw.)`,
+      title: `${estimate.label} (${estimate.severityLabel}) — Federal`,
+      detail: `Macro shock ${formatPct(applied)} to national GDP. (No relief fund draw.)`,
     })
     return next
   }
@@ -392,7 +336,7 @@ export function presidentialRelief(
 
   pushLog(next, {
     kind: 'event',
-    title: `Presidential relief — ${estimate.label} ${estimate.severityLabel} (${region.name})`,
+    title: `Presidential relief — ${estimate.label} ${estimate.severityLabel} (Federal)`,
     detail: discord,
     amounts: { federal: -amount },
   })
@@ -436,8 +380,8 @@ export function previewEventCost(
     costMin: e.neededMin,
     costMax: e.neededMax,
     costMid: e.neededRecommended,
-    pctOfGdpMin: e.neededMin / state.governments[regionId].economy.gdp,
-    pctOfGdpMax: e.neededMax / state.governments[regionId].economy.gdp,
+    pctOfGdpMin: e.neededMin / state.governments.federal.economy.gdp,
+    pctOfGdpMax: e.neededMax / state.governments.federal.economy.gdp,
     estimate: e,
   }
 }

@@ -5,30 +5,28 @@ import {
   type EconomyState,
 } from './economy'
 
-const STORAGE_KEY = 'discord-budget-sim-v10'
+const STORAGE_KEY = 'discord-budget-sim-v11'
 
 function migrate(raw: unknown): EconomyState {
   const base = createInitialState()
   if (!raw || typeof raw !== 'object') return base
   const data = raw as Partial<EconomyState> & {
-    governments?: EconomyState['governments']
-  }
-
-  const governments = data.governments ?? base.governments
-  for (const id of Object.keys(governments) as (keyof typeof governments)[]) {
-    const eco = governments[id]?.economy as
-      | (EconomyState['governments'][typeof id]['economy'] & {
-          approvalRating?: number
-        })
-      | undefined
-    if (eco && 'approvalRating' in eco) {
-      delete eco.approvalRating
+    governments?: Partial<EconomyState['governments']> & {
+      west?: unknown
+      east?: unknown
+      central?: unknown
     }
   }
 
+  const federal = data.governments?.federal ?? base.governments.federal
+  const eco = federal.economy as typeof federal.economy & {
+    approvalRating?: number
+  }
+  if ('approvalRating' in eco) delete eco.approvalRating
+
   return {
     period: data.period ?? base.period,
-    governments,
+    governments: { federal },
     membership: {
       ...DEFAULT_MEMBERSHIP,
       ...(data.membership ?? {}),
